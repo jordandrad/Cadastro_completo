@@ -78,7 +78,6 @@ class _LoginState extends State<Login> {
   }
 
   suo() async {
-    
     SharedPreferences prefs = await SharedPreferences.getInstance();
     print(prefs.getString("Username"));
     print(prefs.getString("Password"));
@@ -98,17 +97,86 @@ class _LoginState extends State<Login> {
     Navigator.push(context, MaterialPageRoute(builder: (context) => Home()));
   }
 
+  void checkEmail() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (_controllerCheckEmail.text.toString() == prefs.getString("Email") &&
+        prefs.getBool("hasAccount") == true) {
+      setState(() {
+        indexRecover = 1;
+        checkedPassword = prefs.getString("Password")!;
+      });
+    } else {
+      setState(() {
+        feedbackRecover = "Try again";
+      });
+    }
+  }
+
   Future<Map<String, dynamic>>? userInfo;
   TextEditingController _controllerUserName = TextEditingController();
   TextEditingController _controllerPassword = TextEditingController();
+  TextEditingController _controllerCheckEmail = TextEditingController();
   String mainText = "Hi, welcome to your app!";
   var colorStatusText = Colors.black;
   String statusText = "";
+  int indexRecover = 0;
+  String checkedPassword = "";
+  String feedbackRecover = "First, enter your email below";
+  Widget passwordScreen() => Container(
+      height: 120,
+      width: 120,
+      child: Column(
+        children: [
+          Text("This is your current password"),
+          Padding(
+            padding: EdgeInsets.only(top: 10, bottom: 10, left: 20, right: 20),
+            child: Container(
+                height: 30,
+                width: 300,
+                decoration: BoxDecoration(color: Colors.blue),
+                child: Center(
+                  child: Text(
+                    checkedPassword,
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                )),
+          ),
+          ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  indexRecover = 0;
+                });
+              },
+              child: Text("Back"))
+        ],
+      ));
+  Widget recoverScreen() => Container(
+        height: 200,
+        width: 120,
+        child: Column(
+          children: [
+            Text(feedbackRecover),
+            Padding(
+              padding: EdgeInsets.only(top: 10),
+              child: TextField(
+                controller: _controllerCheckEmail,
+                keyboardType: TextInputType.emailAddress,
+                decoration:
+                    InputDecoration(label: Text("Type your email here")),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(left: 110, top: 20),
+              child:
+                  ElevatedButton(onPressed: checkEmail, child: Text("Recover")),
+            )
+          ],
+        ),
+      );
 
   Widget build(BuildContext context) {
-    void navigateToHome() {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => Home()));
-    }
+    List<Widget> recover = [recoverScreen(), passwordScreen()];
 
     return Scaffold(
       appBar: AppBar(
@@ -180,10 +248,25 @@ class _LoginState extends State<Login> {
                                 ),
                               ),
                               Padding(
-                                padding: EdgeInsets.only(top: 15, bottom: 30),
+                                padding: EdgeInsets.only(top: 15, bottom: 10),
                                 child: ElevatedButton(
                                     onPressed: check, child: Text("Enter")),
                               ),
+                              Padding(
+                                padding: EdgeInsets.only(bottom: 30),
+                                child: ElevatedButton(
+                                    onPressed: () {
+                                      showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return AlertDialog(
+                                              title: Text("Recover password"),
+                                              content: recover[indexRecover],
+                                            );
+                                          });
+                                    },
+                                    child: Text("Recover password")),
+                              )
                             ])));
               }
           }
